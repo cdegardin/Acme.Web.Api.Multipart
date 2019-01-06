@@ -58,9 +58,9 @@ namespace Acme.Web.Api.Multipart
                 else
                 {
                     var listOfFileType = typeof(IEnumerable<HttpPostedFileBase>);
-                    foreach (var property in objectContract.Properties.Where(p => p.PropertyType == httpPostedFileBaseType || listOfFileType.IsAssignableFrom(p.PropertyType)))
+                    foreach (var property in objectContract.Properties.Where(p => (p.PropertyType == httpPostedFileBaseType || listOfFileType.IsAssignableFrom(p.PropertyType)) && !p.Ignored))
                     {
-                        property.Ignored = false;
+                        property.ShouldSerialize = e => false;
                     }
                 }
             }

@@ -12,6 +12,8 @@
         [DataMember(Name = "check")]
         public bool Check { get; set; }
 
+        [DataMember(Name = "contracts")]
+        //public IEnumerable<HttpPostedFileBase> Contracts { get; set; }
         public Collection<HttpPostedFileBase> Contracts { get; } = new Collection<HttpPostedFileBase>();
 
         [DataMember(Name = "email")]
@@ -20,6 +22,7 @@
         [DataMember(Name = "password")]
         public string Password { get; set; }
 
+        [DataMember(Name = "photo")]
         [Required]
         public HttpPostedFileBase Photo { get; set; }
     }
