@@ -10,4 +10,4 @@ if not "%PackageVersion%" == "" (
 )
 
 %nuget% restore
-"%MsBuildExe%" /t:pack /p:Configuration=Release
+"%MsBuildExe%" Acme.Web.Api.Multipart\Acme.Web.Api.Multipart.csproj /t:pack /p:Configuration=Release
