@@ -13,7 +13,6 @@
         public bool Check { get; set; }
 
         [DataMember(Name = "contracts")]
-        //public IEnumerable<HttpPostedFileBase> Contracts { get; set; }
         public Collection<HttpPostedFileBase> Contracts { get; } = new Collection<HttpPostedFileBase>();
 
         [DataMember(Name = "email")]
