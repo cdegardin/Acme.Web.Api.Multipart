@@ -5,7 +5,6 @@
 namespace Acme.Web.Api.Multipart
 {
     using System;
-    using System.Collections.Generic;
     using System.Web;
 
     using Newtonsoft.Json;
@@ -16,20 +15,6 @@ namespace Acme.Web.Api.Multipart
     /// <seealso cref="Newtonsoft.Json.JsonConverter" />
     public class MultipartFileJsonConverter : JsonConverter
     {
-        /// <summary>
-        /// The files
-        /// </summary>
-        private readonly IDictionary<string, HttpPostedFileBase> files;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MultipartFileJsonConverter"/> class.
-        /// </summary>
-        /// <param name="files">The files.</param>
-        public MultipartFileJsonConverter(IDictionary<string, HttpPostedFileBase> files)
-        {
-            this.files = files;
-        }
-
         /// <summary>
         /// Gets a value indicating whether this <see cref="T:Newtonsoft.Json.JsonConverter" /> can write JSON.
         /// </summary>
@@ -59,9 +44,16 @@ namespace Acme.Web.Api.Multipart
         /// </returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            return (reader.Value is string fileReference && this.files.TryGetValue(fileReference, out var file)) ?
-                    file :
-                    null;
+            if (reader.Value is string fileReference)
+            {
+                var file = MultipartMediaTypeFormatter.GetFile(fileReference);
+                if (file != null)
+                {
+                    return file;
+                }
+            }
+
+            return existingValue;
         }
 
         /// <summary>

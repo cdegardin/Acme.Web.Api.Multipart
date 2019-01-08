@@ -8,6 +8,7 @@ namespace Acme.Web.Api.Multipart
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
     using System.Net.Http.Formatting;
     using System.Net.Http.Headers;
@@ -25,7 +26,13 @@ namespace Acme.Web.Api.Multipart
         /// <summary>
         /// The valid json media types
         /// </summary>
-        private static readonly HashSet<string> ValidJsonMediaTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "application/json", "text/json" };
+        private static readonly HashSet<string> ValidJsonMediaTypes = new HashSet<string>(GlobalConfiguration.Configuration.Formatters.JsonFormatter.SupportedMediaTypes.Select(m => m.MediaType), StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The files
+        /// </summary>
+        [ThreadStatic]
+        private static IDictionary<string, HttpPostedFileBase> files;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultipartMediaTypeFormatter"/> class.
@@ -66,33 +73,20 @@ namespace Acme.Web.Api.Multipart
         /// </returns>
         public override async Task<object> ReadFromStreamAsync(Type type, Stream readStream, HttpContent content, IFormatterLogger formatterLogger, CancellationToken cancellationToken)
         {
-            var multipart = await content.ReadAsMultipartAsync(cancellationToken);
-            var json = multipart.Contents.FirstOrDefault(c => c.Headers.ContentDisposition.Name.Trim('"') == "$json$" && ValidJsonMediaTypes.Contains(c.Headers.ContentType?.MediaType));
+            var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempPath);
+            var provider = new MultipartFileStreamProvider(tempPath);
+            await content.ReadAsMultipartAsync(provider, cancellationToken).ConfigureAwait(false);
+            var json = provider.FileData.FirstOrDefault(c => c.Headers.ContentDisposition.Name.Trim('"') == "$json$" && ValidJsonMediaTypes.Contains(c.Headers.ContentType?.MediaType));
             if (json == null)
             {
-                throw new HttpResponseException(new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest) { ReasonPhrase = "Missing $json$ part." });
+                throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest) { ReasonPhrase = "Missing $json$ part." });
             }
 
             var files = new Dictionary<string, HttpPostedFileBase>();
-            foreach (var file in multipart.Contents.Where(c => c != json))
+            foreach (var file in provider.FileData.Where(c => c != json))
             {
-                files.Add(file.Headers.ContentDisposition.Name.Trim('"'), new MultipartFile(file, await file.ReadAsStreamAsync()));
-            }
-
-            object result = null;
-            var jsonFormatter = GlobalConfiguration.Configuration.Formatters.JsonFormatter;
-            using (var jsonStream = await json.ReadAsStreamAsync())
-            using (var reader = jsonFormatter.CreateJsonReader(type, jsonStream, jsonFormatter.SelectCharacterEncoding(content.Headers)))
-            {
-                var serializer = jsonFormatter.CreateJsonSerializer();
-                serializer.Error += (o, e) =>
-                {
-                    var errorContext = e.ErrorContext;
-                    formatterLogger.LogError(errorContext.Path, errorContext.Error);
-                    errorContext.Handled = true;
-                };
-                serializer.ContractResolver = new MultipartContractResolver(serializer.ContractResolver, files);
-                result = serializer.Deserialize(reader, type);
+                files.Add(file.Headers.ContentDisposition.Name.Trim('"'), new MultipartFile(file, File.OpenRead(file.LocalFileName)));
             }
 
             if (files.Any())
@@ -103,10 +97,43 @@ namespace Acme.Web.Api.Multipart
                     {
                         file.Dispose();
                     }
+
+                    Directory.Delete(tempPath, true);
                 });
+            }
+
+            object result = null;
+            var jsonFormatter = GlobalConfiguration.Configuration.Formatters.JsonFormatter;
+            using (var jsonStream = File.OpenRead(json.LocalFileName))
+            using (var reader = jsonFormatter.CreateJsonReader(type, jsonStream, jsonFormatter.SelectCharacterEncoding(content.Headers)))
+            {
+                var serializer = jsonFormatter.CreateJsonSerializer();
+                serializer.Error += (o, e) =>
+                {
+                    var errorContext = e.ErrorContext;
+                    formatterLogger.LogError(errorContext.Path, errorContext.Error);
+                    errorContext.Handled = true;
+                };
+                serializer.ContractResolver = new MultipartContractResolver(serializer.ContractResolver);
+                try
+                {
+                    MultipartMediaTypeFormatter.files = files;
+                    result = serializer.Deserialize(reader, type);
+                }
+                finally
+                {
+                    MultipartMediaTypeFormatter.files = null;
+                }
             }
 
             return result;
         }
+
+        /// <summary>
+        /// Gets the file for the specified <paramref name="key"/>.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The file if found; Otherwise <c>null</c>.</returns>
+        internal static HttpPostedFileBase GetFile(string key) => files.TryGetValue(key, out var result) ? result : null;
     }
 }

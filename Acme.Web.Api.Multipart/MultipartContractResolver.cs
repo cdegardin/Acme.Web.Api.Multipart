@@ -23,19 +23,12 @@ namespace Acme.Web.Api.Multipart
         private readonly IContractResolver contractResolver;
 
         /// <summary>
-        /// The files
-        /// </summary>
-        private readonly IDictionary<string, HttpPostedFileBase> files;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MultipartContractResolver"/> class.
         /// </summary>
         /// <param name="contractResolver">The contract resolver.</param>
-        /// <param name="files">The files.</param>
-        public MultipartContractResolver(IContractResolver contractResolver, IDictionary<string, HttpPostedFileBase> files)
+        public MultipartContractResolver(IContractResolver contractResolver)
         {
             this.contractResolver = contractResolver;
-            this.files = files;
         }
 
         /// <summary>
@@ -51,14 +44,14 @@ namespace Acme.Web.Api.Multipart
             if (contract is JsonObjectContract objectContract)
             {
                 var httpPostedFileBaseType = typeof(HttpPostedFileBase);
-                if (objectContract.UnderlyingType == httpPostedFileBaseType && objectContract.Converter == null)
+                if (type == httpPostedFileBaseType && objectContract.Converter == null)
                 {
-                    objectContract.Converter = new MultipartFileJsonConverter(this.files);
+                    objectContract.Converter = new MultipartFileJsonConverter();
                 }
                 else
                 {
                     var listOfFileType = typeof(IEnumerable<HttpPostedFileBase>);
-                    foreach (var property in objectContract.Properties.Where(p => (p.PropertyType == httpPostedFileBaseType || listOfFileType.IsAssignableFrom(p.PropertyType)) && !p.Ignored))
+                    foreach (var property in objectContract.Properties.Where(p => !p.Ignored && (p.PropertyType == httpPostedFileBaseType || listOfFileType.IsAssignableFrom(p.PropertyType))))
                     {
                         property.ShouldSerialize = e => false;
                     }

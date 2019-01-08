@@ -1,0 +1,1 @@
+﻿declare function getForm(model: any, replacer?: (key: string, value: any) => any): string | FormData;

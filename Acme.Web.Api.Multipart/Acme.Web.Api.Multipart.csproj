@@ -23,6 +23,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Scripts\GetForm.js">
+      <Pack>true</Pack>
+      <PackagePath>content\scripts\</PackagePath>
+    </Content>
+    <Content Include="Scripts\GetForm.d.ts">
+      <Pack>true</Pack>
+      <PackagePath>content\scripts\typings\</PackagePath>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.WebHost" Version="5.1.0" />
     <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
