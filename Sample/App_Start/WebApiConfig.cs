@@ -14,7 +14,7 @@ namespace Sample
 
             // Web API routes
             config.MapHttpAttributeRoutes();
-            config.Formatters.Add(new MultipartMediaTypeFormatter());
+            config.RegisterMultipartFormatter();
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
                 routeTemplate: "api/{controller}/{id}",

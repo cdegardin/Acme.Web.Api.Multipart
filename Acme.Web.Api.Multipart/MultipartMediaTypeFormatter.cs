@@ -102,31 +102,19 @@ namespace Acme.Web.Api.Multipart
                 });
             }
 
-            object result = null;
-            var jsonFormatter = GlobalConfiguration.Configuration.Formatters.JsonFormatter;
             using (var jsonStream = File.OpenRead(json.LocalFileName))
-            using (var reader = jsonFormatter.CreateJsonReader(type, jsonStream, jsonFormatter.SelectCharacterEncoding(content.Headers)))
+            using (var jsonContent = new StreamContent(jsonStream) { Headers = { json.Headers } })
             {
-                var serializer = jsonFormatter.CreateJsonSerializer();
-                serializer.Error += (o, e) =>
-                {
-                    var errorContext = e.ErrorContext;
-                    formatterLogger.LogError(errorContext.Path, errorContext.Error);
-                    errorContext.Handled = true;
-                };
-                serializer.ContractResolver = new MultipartContractResolver(serializer.ContractResolver);
                 try
                 {
                     MultipartMediaTypeFormatter.files = files;
-                    result = serializer.Deserialize(reader, type);
+                    return await GlobalConfiguration.Configuration.Formatters.JsonFormatter.ReadFromStreamAsync(type, jsonStream, jsonContent, formatterLogger);
                 }
                 finally
                 {
                     MultipartMediaTypeFormatter.files = null;
                 }
             }
-
-            return result;
         }
 
         /// <summary>

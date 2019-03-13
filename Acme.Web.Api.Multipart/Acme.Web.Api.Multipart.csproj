@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net452</TargetFramework>
+    <!--<TargetFrameworks>netstandard2.0;net452</TargetFrameworks>-->
+    <TargetFrameworks>net452</TargetFrameworks>
     <Authors>Olivier Bossaer</Authors>
     <Company>ACME</Company>
     <PackageId>Acme.Web.Api.Multipart</PackageId>
@@ -33,7 +34,7 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net452'">
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNet.WebApi.WebHost" Version="5.1.0" />
     <PackageReference Include="Microsoft.Net.Compilers" Version="2.10.0">
@@ -46,5 +47,7 @@
     </PackageReference>
     <Reference Include="System.Web" />
   </ItemGroup>
-
-</Project>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+  </ItemGroup>
+  </Project>

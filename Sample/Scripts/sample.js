@@ -1,6 +1,6 @@
 document.getElementById('sample-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    var duplicateFile = new Blob(['Super file!'], { type: 'text/plain' });
+    var duplicateFile = document.getElementById('photo').files[0];
     const model = {
         email: document.getElementById('email').value,
         password: document.getElementById('password').value,

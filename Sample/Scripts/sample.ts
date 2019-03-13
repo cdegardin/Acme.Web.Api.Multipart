@@ -1,12 +1,12 @@
 ﻿document.getElementById('sample-form').addEventListener('submit', async e =>
 {
     e.preventDefault();
-    var duplicateFile = new Blob(['Super file!'], { type: 'text/plain' });
+    var duplicateFile = (document.getElementById('photo') as HTMLInputElement).files[0];
     const model =
     {
         email: (document.getElementById('email') as HTMLInputElement).value,
         password: (document.getElementById('password') as HTMLInputElement).value,
-        photo: duplicateFile,//(document.getElementById('photo') as HTMLInputElement).files[0],
+        photo: duplicateFile,
         contracts: (document.getElementById('contracts') as HTMLInputElement).files,
         check: (document.getElementById('check') as HTMLInputElement).checked,
         item:
