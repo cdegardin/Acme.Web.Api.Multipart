@@ -32,7 +32,7 @@ namespace Acme.Web.Api.Multipart
         /// The files
         /// </summary>
         [ThreadStatic]
-        private static IDictionary<string, HttpPostedFileBase> files;
+        private static IDictionary<string, MyHttpPostedFileBase> files;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MultipartMediaTypeFormatter"/> class.
@@ -83,7 +83,7 @@ namespace Acme.Web.Api.Multipart
                 throw new HttpResponseException(new HttpResponseMessage(HttpStatusCode.BadRequest) { ReasonPhrase = "Missing $json$ part." });
             }
 
-            var files = new Dictionary<string, HttpPostedFileBase>();
+            var files = new Dictionary<string, MyHttpPostedFileBase>();
             foreach (var file in provider.FileData.Where(c => c != json))
             {
                 files.Add(file.Headers.ContentDisposition.Name.Trim('"'), new MultipartFile(file, File.OpenRead(file.LocalFileName)));
@@ -91,7 +91,7 @@ namespace Acme.Web.Api.Multipart
 
             if (files.Any())
             {
-                HttpContext.Current?.AddOnRequestCompleted(c =>
+                context.HttpContext.Current?.AddOnRequestCompleted(c =>
                 {
                     foreach (var file in files.Values.OfType<IDisposable>())
                     {
@@ -122,6 +122,6 @@ namespace Acme.Web.Api.Multipart
         /// </summary>
         /// <param name="key">The key.</param>
         /// <returns>The file if found; Otherwise <c>null</c>.</returns>
-        internal static HttpPostedFileBase GetFile(string key) => files.TryGetValue(key, out var result) ? result : null;
+        internal static MyHttpPostedFileBase GetFile(string key) => files.TryGetValue(key, out var result) ? result : null;
     }
 }

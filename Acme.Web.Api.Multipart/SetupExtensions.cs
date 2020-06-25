@@ -5,13 +5,16 @@
 namespace Acme.Web.Api.Multipart
 {
     using System.Linq;
+#if NET452
     using System.Web.Http;
+#endif
 
     /// <summary>
     ///   <see cref="SetupExtensions"/>.
     /// </summary>
     public static class SetupExtensions
     {
+#if NET452
         /// <summary>
         /// Registers the multipart formatter.
         /// </summary>
@@ -30,5 +33,6 @@ namespace Acme.Web.Api.Multipart
                 formatters.JsonFormatter.SerializerSettings.ContractResolver = new MultipartContractResolver(contractResolver);
             }
         }
+#endif
     }
 }

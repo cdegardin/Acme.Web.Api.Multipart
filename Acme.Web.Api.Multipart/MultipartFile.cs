@@ -8,14 +8,13 @@ namespace Acme.Web.Api.Multipart
     using System.IO;
     using System.Net.Http;
     using System.Net.Http.Headers;
-    using System.Web;
 
     /// <summary>
     ///   <see cref="MultipartFile"/>.
     /// </summary>
-    /// <seealso cref="System.Web.HttpPostedFileBase" />
-    /// <seealso cref="System.IDisposable" />
-    public sealed class MultipartFile : HttpPostedFileBase, IDisposable
+    /// <seealso cref="MyHttpPostedFileBase" />
+    /// <seealso cref="IDisposable" />
+    public sealed class MultipartFile : MyHttpPostedFileBase, IDisposable
     {
         /// <summary>
         /// The content
